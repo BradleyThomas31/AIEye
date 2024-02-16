@@ -1,16 +1,24 @@
 from openai import OpenAI
 
-client = OpenAI(api_key='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')
+client = OpenAI(api_key='INSERT HERE')
 
-def ask_question(question):
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": question},
-    ])
-    answer = response.choices[0].message.content
-    return answer
+response = client.chat.completions.create(
+  model="gpt-4-vision-preview",
+  messages=[
+    {
+      "role": "user",
+      "content": [
+        {"type": "text", "text": "How many carbohydrates in this?"},
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": "https://www.fda.gov/files/nfl-howtounderstand-pretzels.png",
+          },
+        },
+      ],
+    }
+  ],
+  max_tokens=300,
+)
 
-question = "What is the capital of France?"
-answer = ask_question(question)
-print(f"Question: {question}\nAnswer: {answer}")
-
+print(response.choices[0])
