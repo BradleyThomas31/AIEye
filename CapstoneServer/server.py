@@ -1,27 +1,60 @@
-from llm import get_chat_completion
 from flask import Flask, request, jsonify
+import base64
+import requests
+import os
 
 app = Flask(__name__)
 
-@app.route('/', methods=['GET', 'POST'])
-def hello():
-    if request.method == 'POST':
-        data = request.json 
-        user_input = data.get('inputText', 'No Input Received')
-        print(user_input)  
-        model = "gpt-4-vision-preview"
-        api_key = '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'
-        image_url = "https://img.restaurantguru.com/r3b6-no-246-menu-2022-10-2.jpg"
-        processed_input = get_chat_completion(api_key, model, user_input, image_url)
+@app.route('/', methods=['POST'])
+def analyze_image():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No image file provided'}), 400
 
-        # Ensure processed_input is a string
-        processed_input_str = str(processed_input)
+    # Save the image temporarily
+    image_file = request.files['image']
+    temp_image_path = os.path.join('temp', image_file.filename)
+    image_file.save(temp_image_path)
 
-        # Return combined JSON response
-        return jsonify({'response': user_input, 'processed': processed_input_str})
+    # Encode the image in base64
+    with open(temp_image_path, "rb") as img_file:
+        base64_image = base64.b64encode(img_file.read()).decode('utf-8')
 
-    else:
-        return 'Hello World!'
+    # Prepare headers and payload for OpenAI API
+    api_key = "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"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+    payload = {
+        "model": "gpt-4-vision-preview",
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "What’s in this image?"
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64_image}"
+                        }
+                    }
+                ]
+            }
+        ],
+        "max_tokens": 300
+    }
+
+    # Make the request to OpenAI API
+    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+
+    # Remove the temporary image to clean up
+    os.remove(temp_image_path)
+
+    # Return the response from OpenAI API to the client
+    return jsonify(response.json())
 
 if __name__ == '__main__':
     app.run(debug=True)
