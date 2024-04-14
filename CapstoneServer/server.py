@@ -1,9 +1,38 @@
 from flask import Flask, request, jsonify
+from PIL import Image
 import base64
 import requests
 import os
+import pytesseract
+import traceback
 
 app = Flask(__name__)
+
+@app.route('/translate', methods=['POST'])
+def imageToText():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No image file provided'}), 400
+    print("bbb")
+    # Save the image temporarily
+    image_file = request.files['image']
+    temp_image_path = os.path.join('temp', image_file.filename)
+    image_file.save(temp_image_path)
+    try:
+        print("ccc")
+        # Use Pytesseract to convert the image to text
+        text = pytesseract.image_to_string(Image.open(temp_image_path))
+        print("ddd")
+        print(text)
+        # Clean up: remove the temporary saved image
+        # os.remove(temp_image_path)
+
+        return jsonify({'text': text}), 200
+    except Exception as e:
+        # Print the full stack trace
+        traceback.print_exc()
+        # Clean up and handle errors
+        os.remove(temp_image_path)
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/', methods=['POST'])
 def analyze_image():
