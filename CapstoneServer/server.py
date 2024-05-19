@@ -22,7 +22,7 @@ def analyze_image():
     with open(temp_image_path, "rb") as img_file:
         base64_image = base64.b64encode(img_file.read()).decode('utf-8')
 
-    api_key = "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"
+    api_key = "X"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"

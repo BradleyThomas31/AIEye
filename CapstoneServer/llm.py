@@ -22,7 +22,7 @@ def get_chat_completion(api_key, model, user_text, image_url):
     )
     return response.choices[0].message.content
 
-api_key = "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"
+api_key = "X"
 model = "gpt-4-vision-preview"
 user_text = "Is there a steak on the menu?? (Answer in 20 words or less)"
 image_url = "https://img.restaurantguru.com/r3b6-no-246-menu-2022-10-2.jpg"
